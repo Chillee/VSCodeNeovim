@@ -33,6 +33,7 @@ export class Screen {
   highlighter: any;
   cmdline: vscode.StatusBarItem;
   wildmenu: vscode.StatusBarItem[];
+  wildmenuItems: string[];
   highlightGroups: {
     IncSearch: HighlightGroup;
     Search: HighlightGroup;
@@ -179,7 +180,8 @@ export class Screen {
     }
   }
 
-  redraw(changes: Array<any>) {
+  async redraw(changes: Array<any>) {
+    let highlightsChanged = false;
     for (let change of changes) {
       change = change as Array<any>;
       const name = change[0];
@@ -192,6 +194,7 @@ export class Screen {
           this.term[this.y][this.x + i].v = ' ';
           this.term[this.y][this.x + i].highlight = {};
         }
+        highlightsChanged = true;
       } else if (name === 'put') {
         for (const cs of args) {
           for (const c of cs) {
@@ -200,6 +203,7 @@ export class Screen {
             this.x += 1;
           }
         }
+        highlightsChanged = true;
       } else if (name === 'highlight_set') {
         this.highlighter = args[args.length - 1][0];
       } else if (name === 'set_scroll_region') {
@@ -216,7 +220,6 @@ export class Screen {
       } else if (name === 'mode_change') {
         this.handleModeChange(args[0]);
       } else if (name === 'cmdline_show') {
-        console.log(name);
         let text = '';
         for (let hlText of args[0][0]) {
           text += hlText[1];
@@ -228,14 +231,14 @@ export class Screen {
           text.slice(0, args[0][1]) +
           '|' +
           text.slice(args[0][1]);
+        this.cmdline.text += ' '.repeat(30 - this.cmdline.text.length % 30);
         this.cmdline.show();
-        console.log(args);
+      } else if (name === 'cmdline_hide') {
+        this.cmdline.hide();
       } else if (
         [
-          'cmdline_show',
           'cmdline_pos',
           'cmdline_special_char',
-          'cmdline_hide',
           'cmdline_block_show',
           'cmdline_block_append',
           'cmdline_block_hide',
@@ -243,6 +246,40 @@ export class Screen {
       ) {
         // console.log(name);
         // console.log(args);
+      } else if (name === 'wildmenu_show') {
+        this.wildmenuItems = args[0][0];
+      } else if (name === 'wildmenu_hide') {
+        for (const i of this.wildmenu) {
+          i.hide();
+        }
+      } else if (name === 'wildmenu_select') {
+        // There's logic in here to "batch" wildmenu items into groups of 5 each.
+        const selectIndex = args[0][0];
+        const NUM_ITEMS_TO_SHOW = 5;
+        const startIndex = selectIndex - selectIndex % NUM_ITEMS_TO_SHOW;
+        const endIndex = selectIndex + 5 - selectIndex % NUM_ITEMS_TO_SHOW;
+        let offset = startIndex > 0 ? 1 : 0;
+        if (offset) {
+          this.wildmenu[0].text = '<';
+        }
+        for (let i = 0; i < NUM_ITEMS_TO_SHOW; i++) {
+          this.wildmenu[i + offset].text = this.wildmenuItems[startIndex + i];
+          if (startIndex + i === selectIndex) {
+            this.wildmenu[i + offset].color = new vscode.ThemeColor(
+              'statusBarItem.prominentBackground'
+            );
+          } else {
+            this.wildmenu[i + offset].color = undefined;
+          }
+          this.wildmenu[i + offset].show();
+        }
+        if (endIndex < this.wildmenuItems.length - 1) {
+          this.wildmenu[offset + NUM_ITEMS_TO_SHOW].text = '>';
+          this.wildmenu[offset + NUM_ITEMS_TO_SHOW].show();
+        }
+        for (let i = offset + NUM_ITEMS_TO_SHOW + 1; i < this.wildmenu.length; i++) {
+          this.wildmenu[i].hide();
+        }
       } else {
         // console.log(name);
         // console.log(args);
@@ -253,35 +290,39 @@ export class Screen {
     if (Vim.DEBUG) {
       this.cmdline.text = this.term[this.height - 1].map(x => x.v).join('');
       this.cmdline.show();
-    }
-    const wildmenuText = this.term[this.height - 2]
-      .map(x => x.v)
-      .join('')
-      .replace(/\s+$/, '');
-    let wildmenu: string[] = wildmenuText.split(/\s+/);
-    // Doesn't always work, who cares??? What a pain in the ass. I don't want to not use regex.
-    let wildmenuIdx = wildmenu.map(x => wildmenuText.indexOf(x));
-    if (wildmenu[0] === '<' || wildmenu[wildmenu.length - 1] === '>') {
-      for (let i = 0; i < wildmenu.length; i++) {
-        this.wildmenu[i].text = wildmenu[i];
-        this.wildmenu[i].show();
-        if (this.term[this.height - 2][wildmenuIdx[i]].highlight.hasOwnProperty('foreground')) {
-          this.wildmenu[i].color = 'red';
-        } else {
-          this.wildmenu[i].color = 'white';
+      const wildmenuText = this.term[this.height - 2]
+        .map(x => x.v)
+        .join('')
+        .replace(/\s+$/, '');
+      let wildmenu: string[] = wildmenuText.split(/\s+/);
+      // Doesn't always work, who cares??? What a pain in the ass. I don't want to not use regex.
+      let wildmenuIdx = wildmenu.map(x => wildmenuText.indexOf(x));
+      if (wildmenu[0] === '<' || wildmenu[wildmenu.length - 1] === '>') {
+        for (let i = 0; i < wildmenu.length; i++) {
+          this.wildmenu[i].text = wildmenu[i];
+          this.wildmenu[i].show();
+          if (this.term[this.height - 2][wildmenuIdx[i]].highlight.hasOwnProperty('foreground')) {
+            this.wildmenu[i].color = 'red';
+          } else {
+            this.wildmenu[i].color = 'white';
+          }
+        }
+        for (let i = wildmenu.length; i < this.wildmenu.length; i++) {
+          this.wildmenu[i].hide();
+        }
+      } else {
+        for (let i = 0; i < this.wildmenu.length; i++) {
+          this.wildmenu[i].hide();
         }
       }
-      for (let i = wildmenu.length; i < this.wildmenu.length; i++) {
-        this.wildmenu[i].hide();
-      }
-    } else {
-      for (let i = 0; i < this.wildmenu.length; i++) {
-        this.wildmenu[i].hide();
-      }
     }
-    if (!vscode.workspace.getConfiguration('vim').get('enableHighlights')) {
+
+    if (!vscode.workspace.getConfiguration('vim').get('enableHighlights') || !highlightsChanged) {
       return;
     }
+    let curPos = await NvUtil.getCursorPos();
+    let yOffset = curPos.line - ((await Vim.nv.call('winline')) - 1);
+    let xOffset = curPos.character - ((await Vim.nv.call('wincol')) - 1);
     for (const hlGroup of Object.keys(this.highlightGroups)) {
       const group = this.highlightGroups[hlGroup];
       if (group.decorator === undefined) {
@@ -300,7 +341,10 @@ export class Screen {
           } else if (isRange && !(this.term[i][j].highlight.background === group.vimColor)) {
             isRange = false;
             decorations.push(
-              new vscode.Range(new vscode.Position(i, start), new vscode.Position(i, j))
+              new vscode.Range(
+                new vscode.Position(i + yOffset, start + xOffset),
+                new vscode.Position(i + yOffset, j + xOffset)
+              )
             );
           }
         }
