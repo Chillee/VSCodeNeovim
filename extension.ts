@@ -123,7 +123,7 @@ export async function activate(context: vscode.ExtensionContext) {
   Vim.channelId = (await nvim.requestApi())[0] as number;
 
   const WIDTH = 50;
-  const HEIGHT = 50;
+  const HEIGHT = 36;
   nvim.uiAttach(WIDTH, HEIGHT, { ext_cmdline: true, ext_wildmenu: true });
   Vim.screen = new Screen({ width: WIDTH, height: HEIGHT });
 

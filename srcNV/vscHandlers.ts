@@ -20,18 +20,26 @@ export class VscHandlers {
       if (Vim.mode.mode === 'r') {
         await Vim.nv.input('<CR>');
       }
-      // Optimization that makes movement very smooth. However, occasionally
-      // makes it more difficult to debug so it's turned off for now.
-      // const curTick = await Vim.nv.buffer.changedtick;
-      // if (curTick === Vim.prevState.bufferTick) {
-      //   await NvUtil.changeSelectionFromMode(Vim.mode.mode);
-      //   return;
-      // }
-      // Vim.prevState.bufferTick = curTick;
 
       const curPos = await NvUtil.getCursorPos();
       const startPos = await NvUtil.getSelectionStartPos();
       const curWant = await NvUtil.getCurWant();
+      const winline = (await Vim.nv.call('winline')) - 1;
+      const curTick = await Vim.nv.buffer.changedtick;
+      vscode.commands.executeCommand('revealLine', {
+        lineNumber: Math.min(
+          vscode.window.activeTextEditor!.selection.active.line,
+          curPos.line - winline
+        ),
+        at: 'top',
+      });
+      // Optimization that makes movement very smooth. However, occasionally
+      // makes it more difficult to debug so it's turned off for now.
+      // if (curTick === Vim.prevState.bufferTick) {
+      //   NvUtil.changeSelectionFromModeSync(Vim.mode.mode, curPos, startPos, curWant);
+      //   return;
+      // }
+      // Vim.prevState.bufferTick = curTick;
       NvUtil.changeSelectionFromModeSync(Vim.mode.mode, curPos, startPos, curWant);
       await NvUtil.copyTextFromNeovim();
       NvUtil.changeSelectionFromModeSync(Vim.mode.mode, curPos, startPos, curWant);
