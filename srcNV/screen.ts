@@ -86,7 +86,8 @@ export class Screen {
         }
       } else {
         for (let x = left; x < right; x++) {
-          this.term[y][x] = new Cell(' '); // (right - left);
+          this.term[y][x] = new Cell(' ');
+          this.term[y][x].highlight = this.highlighter;
         }
       }
     }
@@ -224,9 +225,9 @@ export class Screen {
       } else if (name === 'set_scroll_region') {
         this.scrollRegion = {
           top: args[0][0],
-          bottom: args[0][1],
+          bottom: args[0][1] + 1,
           left: args[0][2],
-          right: args[0][3],
+          right: args[0][3] + 1,
         };
       } else if (name === 'resize') {
         this.resize({ width: args[0][0], height: args[0][1] });
