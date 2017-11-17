@@ -36,7 +36,8 @@
               "<down>",
               "<left>",
               "<right>",
-              "<c-bs>"
+              "<c-bs>",
+              "<cr>"
             ],
             "visual": []
           }
