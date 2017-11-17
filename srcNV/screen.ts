@@ -24,11 +24,12 @@ export interface IgnoredKeys {
   visual: string[];
 }
 export interface HighlightGroup {
-  vimColor: number;
+  name: string;
   decorator?: vscode.TextEditorDecorationType;
 }
 
 export class Screen {
+  OFFSET_COLOR = 1;
   term: Array<Array<Cell>> = [];
   cursX: number;
   cursY: number;
@@ -37,10 +38,7 @@ export class Screen {
   cmdline: vscode.StatusBarItem;
   wildmenu: vscode.StatusBarItem[];
   wildmenuItems: string[];
-  highlightGroups: {
-    IncSearch: HighlightGroup;
-    Search: HighlightGroup;
-  };
+  highlightGroups: HighlightGroup[];
   scrollRegion: {
     top: number;
     bottom: number;
@@ -109,49 +107,50 @@ export class Screen {
       // this.wildmenu[i].show();
     }
     // todo(chilli): Offer some way of binding these from the client side.
-    let hlGroups = {
-      IncSearch: {
-        vimColor: 1,
+    this.highlightGroups = [
+      {
+        name: 'IncSearch',
         decorator: vscode.window.createTextEditorDecorationType({
           backgroundColor: new vscode.ThemeColor('editor.findMatchBackground'),
         }),
       },
-      Search: {
-        vimColor: 2,
+      {
+        name: 'Search',
         decorator: vscode.window.createTextEditorDecorationType({
           backgroundColor: new vscode.ThemeColor('editor.findMatchHighlightBackground'),
         }),
       },
-      multiple_cursors_visual: {
-        vimColor: 3,
+      {
+        name: 'multiple_cursors_visual',
         decorator: vscode.window.createTextEditorDecorationType({
           backgroundColor: new vscode.ThemeColor('editor.selectionBackground'),
         }),
       },
-      multiple_cursors_cursor: {
-        vimColor: 4,
+      {
+        name: 'multiple_cursors_cursor',
         decorator: vscode.window.createTextEditorDecorationType({
           backgroundColor: new vscode.ThemeColor('editorCursor.foreground'),
         }),
       },
-      EasyMotionTarget: {
-        vimColor: 5,
+      {
+        name: 'EasyMotionTarget',
         decorator: vscode.window.createTextEditorDecorationType({
           backgroundColor: 'black',
           textDecoration: 'none;color: red',
         }),
       },
-      EasyMotionShade: {
-        vimColor: 6,
+      {
+        name: 'EasyMotionShade',
         decorator: vscode.window.createTextEditorDecorationType({
           textDecoration: 'none;opacity: 0.3',
         }),
       },
-    };
-    for (const hlGroup of Object.keys(hlGroups)) {
-      Vim.nv.command(`highlight ${hlGroup} guibg='#00000${hlGroups[hlGroup].vimColor}'`);
+    ];
+    for (let i = 0; i < this.highlightGroups.length; i++) {
+      Vim.nv.command(
+        `highlight ${this.highlightGroups[i].name} guibg='#00000${i + this.OFFSET_COLOR}'`
+      );
     }
-    this.highlightGroups = hlGroups;
   }
   private async handleModeChange(mode: [string, number]) {
     if (mode[0] === 'insert') {
@@ -339,37 +338,41 @@ export class Screen {
     let curPos = await NvUtil.getCursorPos();
     let yOffset = curPos.line - ((await Vim.nv.call('winline')) - 1);
     let xOffset = curPos.character - ((await Vim.nv.call('wincol')) - 1);
-    for (const hlGroup of Object.keys(this.highlightGroups)) {
-      const group = this.highlightGroups[hlGroup];
-      if (group.decorator === undefined) {
+    let hlDecorations: vscode.Range[][] = [];
+    for (let i = 0; i < this.highlightGroups.length; i++) {
+      hlDecorations.push([]);
+    }
+    let curVimColor = -1;
+    for (let i = 0; i < this.size.height; i++) {
+      let isRange = false;
+      let start = 0;
+      for (let j = 0; j < this.size.width; j++) {
+        if (isRange && !(this.term[i][j].highlight.background === curVimColor)) {
+          isRange = false;
+          hlDecorations[curVimColor - this.OFFSET_COLOR].push(
+            new vscode.Range(
+              new vscode.Position(i + yOffset, start + xOffset),
+              new vscode.Position(i + yOffset, j + xOffset)
+            )
+          );
+          curVimColor = -1;
+        }
+        const cellColor = this.term[i][j].highlight.background - this.OFFSET_COLOR;
+        if (!isRange && cellColor >= 0 && cellColor < hlDecorations.length) {
+          start = j;
+          isRange = true;
+          curVimColor = this.term[i][j].highlight.background;
+        }
+      }
+    }
+    for (let i = 0; i < hlDecorations.length; i++) {
+      if (!(this.highlightGroups[i].decorator && vscode.window.activeTextEditor)) {
         continue;
       }
-      let decorations: vscode.Range[] = [];
-      let result = '';
-      for (let i = 0; i < this.size.height; i++) {
-        let isRange = false;
-        let start = 0;
-        for (let j = 0; j < this.size.width; j++) {
-          result += this.term[i][j].v;
-          if (!isRange && this.term[i][j].highlight.background === group.vimColor) {
-            start = j;
-            isRange = true;
-          } else if (isRange && !(this.term[i][j].highlight.background === group.vimColor)) {
-            isRange = false;
-            decorations.push(
-              new vscode.Range(
-                new vscode.Position(i + yOffset, start + xOffset),
-                new vscode.Position(i + yOffset, j + xOffset)
-              )
-            );
-          }
-        }
-        result += '\n';
-      }
-
-      if (vscode.window.activeTextEditor) {
-        vscode.window.activeTextEditor!.setDecorations(group.decorator, decorations);
-      }
+      vscode.window.activeTextEditor!.setDecorations(
+        this.highlightGroups[i].decorator!,
+        hlDecorations[i]
+      );
     }
   }
 }
