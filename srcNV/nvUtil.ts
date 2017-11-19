@@ -18,15 +18,14 @@ type UndoTree = {
 
 export class NvUtil {
   private static _caretDecoration = vscode.window.createTextEditorDecorationType({
+    backgroundColor: new vscode.ThemeColor('editorCursor.foreground'),
+    borderColor: new vscode.ThemeColor('editorCursor.foreground'),
     dark: {
-      // used for dark colored themes
-      backgroundColor: 'rgba(240, 240, 240, 0.6)',
-      borderColor: 'rgba(0, 0, 0, 1.0)',
+      color: '#515052',
     },
     light: {
       // used for light colored themes
-      backgroundColor: 'rgba(32, 32, 32, 0.6)',
-      borderColor: 'rgba(0, 0, 0, 1.0)',
+      color: 'rgb(255, 255, 255)',
     },
     borderStyle: 'solid',
     borderWidth: '1px',
