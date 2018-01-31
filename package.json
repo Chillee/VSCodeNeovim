@@ -1,14 +1,9 @@
 {
-  "activationEvents": [
-    "*"
-  ],
+  "activationEvents": ["*"],
   "bugs": {
     "url": "https://github.com/VSCodeVim/Vim/issues"
   },
-  "categories": [
-    "Other",
-    "Keymaps"
-  ],
+  "categories": ["Other", "Keymaps"],
   "contributes": {
     "commands": [],
     "configuration": {
@@ -18,15 +13,7 @@
         },
         "vim.ignoreKeys": {
           "default": {
-            "all": [
-              "<s-esc>",
-              "<c-`>",
-              "<c-p>",
-              "<c-k>",
-              "<c-b>",
-              "<c-space>",
-              "<c-z>"
-            ],
+            "all": ["<s-esc>", "<c-`>", "<c-p>", "<c-k>", "<c-b>", "<c-space>", "<c-z>"],
             "normal": [],
             "insert": [
               "<tab>",
@@ -44,7 +31,8 @@
         },
         "vim.neovimPath": {
           "type": "string",
-          "description": "Path to run neovim executable. For example, /usr/bin/nvim, or  C:\\Program Files\\Neovim\\bin\\nvim.exe",
+          "description":
+            "Path to run neovim executable. For example, /usr/bin/nvim, or  C:\\Program Files\\Neovim\\bin\\nvim.exe",
           "default": "nvim"
         }
       },
@@ -587,7 +575,7 @@
     "@types/node": "^8.0.47",
     "gulp": "^3.9.1",
     "gulp-bump": "^2.8.0",
-    "gulp-git": "^2.4.1",
+    "gulp-git": "^2.5.1",
     "gulp-inject-string": "^1.1.0",
     "gulp-shell": "^0.6.3",
     "gulp-tag-version": "^1.3.0",
@@ -609,11 +597,7 @@
   },
   "homepage": "https://github.com/VSCodeVim/Vim",
   "icon": "images/icon.png",
-  "keywords": [
-    "vim",
-    "vi",
-    "vscodevim"
-  ],
+  "keywords": ["vim", "vi", "vscodevim"],
   "license": "MIT",
   "main": "./out/extension",
   "name": "vim",
