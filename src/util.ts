@@ -5,11 +5,11 @@ import * as vscode from 'vscode';
 import { Range } from './common/motion/range';
 import { Position } from './common/motion/position';
 
-export async function showInfo(message : string): Promise<{}> {
+export async function showInfo(message: string): Promise<{}> {
   return vscode.window.showInformationMessage("Vim: " + message) as {};
 }
 
-export async function showError(message : string): Promise<{}> {
+export async function showError(message: string): Promise<{}> {
   return vscode.window.showErrorMessage("Vim: " + message) as {};
 }
 

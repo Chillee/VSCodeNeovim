@@ -1,9 +1,14 @@
 {
-  "activationEvents": ["*"],
+  "activationEvents": [
+    "*"
+  ],
   "bugs": {
     "url": "https://github.com/VSCodeVim/Vim/issues"
   },
-  "categories": ["Other", "Keymaps"],
+  "categories": [
+    "Other",
+    "Keymaps"
+  ],
   "contributes": {
     "commands": [],
     "configuration": {
@@ -13,7 +18,15 @@
         },
         "vim.ignoreKeys": {
           "default": {
-            "all": ["<s-esc>", "<c-`>", "<c-p>", "<c-k>", "<c-b>", "<c-space>", "<c-z>"],
+            "all": [
+              "<s-esc>",
+              "<c-`>",
+              "<c-p>",
+              "<c-k>",
+              "<c-b>",
+              "<c-space>",
+              "<c-z>"
+            ],
             "normal": [],
             "insert": [
               "<tab>",
@@ -31,8 +44,7 @@
         },
         "vim.neovimPath": {
           "type": "string",
-          "description":
-            "Path to run neovim executable. For example, /usr/bin/nvim, or  C:\\Program Files\\Neovim\\bin\\nvim.exe",
+          "description": "Path to run neovim executable. For example, /usr/bin/nvim, or  C:\\Program Files\\Neovim\\bin\\nvim.exe",
           "default": "nvim"
         }
       },
@@ -597,7 +609,11 @@
   },
   "homepage": "https://github.com/VSCodeVim/Vim",
   "icon": "images/icon.png",
-  "keywords": ["vim", "vi", "vscodevim"],
+  "keywords": [
+    "vim",
+    "vi",
+    "vscodevim"
+  ],
   "license": "MIT",
   "main": "./out/extension",
   "name": "vim",
