@@ -53,7 +53,7 @@ export class NvUtil {
   static async ctrlGMove(start: number, target: number) {
     if (start < target) {
       // todo(chilli): Causes race condition that seems very tricky to fix :/
-      // await Vim.nv.input('<C-g>U<Right>'.repeat(target - start));
+      await Vim.nv.input('<C-g>U<Right>'.repeat(target - start));
     } else if (start > target) {
       await Vim.nv.input('<C-g>U<Left>'.repeat(start - target));
     }
